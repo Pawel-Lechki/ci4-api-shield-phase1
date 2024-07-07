@@ -4,7 +4,7 @@ namespace App\Controllers\Api;
 
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
-use App\Model\StudentModel;
+use App\Models\StudentModel;
 
 class ApiController extends ResourceController
 {
@@ -24,30 +24,69 @@ class ApiController extends ResourceController
                 "message" => $this->validator->getErrors(),
                 "data" => []            
             ];
-        } else {
 
+        } else {
             $imageFile = $this->request->getFile("profile_image");
 
             if (isset($imageFile) && !empty($imageFile))
             {
                 $imageName = $imageFile->getName();
 
-            $tempArray = explode(".", $imageName);
+                $tempArray = explode(".", $imageName);
 
-            $newImageName = round(microtime(true)."".end($tempArray));
+                $newImageName = round(microtime(true)) . "." . end($tempArray);
 
-            if ($imageFile->move("images/".$newImageName)) {
+                if ($imageFile->move("images", $newImageName))
+                {
+                    $studentObject = new StudentModel();
+
+                    $data = [
+                        "name" => $this->request->getVar("name"),
+                        "email" => $this->request->getVar("email"), 
+                        "phone" => $this->request->getVar("phone"), 
+                        "profile_image" => "images/" . $newImageName
+                    ];
+
+                    if ($studentObject->insert($data)) {
+
+                        $response = [
+                            "status" => true,
+                            "message" => "Student added!",
+                            "data" => []            
+                        ];
+
+                    } else {
+
+                        $response = [
+                        "status" => false,
+                        "message" => "Failed to add student!",
+                        "data" => []            
+                    ];
+
+                    }
+
+                } else {
+
+                    $response = [
+                        "status" => false,
+                        "message" => "Failed to upload image.",
+                        "data" => []            
+                    ];
+                }
+
+                
+            } else {
 
                 $studentObject = new StudentModel();
 
                 $data = [
                     "name" => $this->request->getVar("name"),
                     "email" => $this->request->getVar("email"),
-                    "phone" => $this->request->getVar("phone"),
-                    "profile_image" => "images/" . $newImageName,
+                    "phone" => $this->request->getVar("phone")
                 ];
 
-                if ($studentObject->insert($data)) {
+                if($studentObject->insert($data)) {
+
                     $response = [
                         "status" => true,
                         "message" => "Student added.",
@@ -55,43 +94,15 @@ class ApiController extends ResourceController
                     ];
 
                 } else {
+
                     $response = [
                         "status" => false,
                         "message" => "Faild to add student.",
                         "data" => []
                     ];
+
                 }
-            } else {
-                $studentObject = new StudentModel();
 
-                $data = [
-                    "name" => $this->request->getVar("name"),
-                    "email" => $this->request->getVar("email"),
-                    "phone" => $this->request->getVar("phone"),
-                ];
-
-                if ($studentObject->insert($data)) {
-                    $response = [
-                        "status" => true,
-                        "message" => "Student added.",
-                        "data" => []
-                    ];
-
-                } else {
-                    $response = [
-                        "status" => false,
-                        "message" => "Faild to add student.",
-                        "data" => []
-                    ];
-                }
-            }
-
-            } else {
-                $response = [
-                    "status" => false,
-                    "message" => "Faild to upload image.",
-                    "data" => []
-                ];
             }
         }
 
@@ -101,7 +112,29 @@ class ApiController extends ResourceController
     // GET
     public function listStudents()
     {
+        $studentObject = new StudentModel();
 
+        $students = $studentObject->findAll();
+
+        if (!empty($students))
+        {
+            $response = [
+                "status" => true,
+                "message" => "Students found",
+                "data" => $students
+            ];
+
+        } else {
+
+             $response = [
+                "status" => false,
+                "message" => "No students found",
+                "data" => []
+            ];
+
+        }
+
+        return $this->respondCreated($response);
     }
 
     // GET
