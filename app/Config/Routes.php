@@ -17,4 +17,4 @@ $routes->group("api", ["namespace" => "App\Controllers\Api"], function ($routes)
   $routes->put("update-student/(:num)", 'ApiController::updateStudent/$1');
   $routes->delete("delete-student/(:num)", 'ApiController::deleteStudent/$1');
 
-})
+});
