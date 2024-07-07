@@ -167,12 +167,121 @@ class ApiController extends ResourceController
     // PUT
     public function updateStudent($student_id, $student_data)
     {
-        // formData
+        $studentObject = new StudentModel();
+
+        $student = $studentObject->find($student_id);
+
+        if (!empty($student)) {
+
+            $name = $this->request->getVar("name");
+            if (isset($name) && !empty($name))
+            {
+                $student['name'] = $name;
+            }
+
+            $email = $this->request->getVar("email");
+            if (isset($name) && !empty($name))
+            {
+                $student['email'] = $email;
+            }
+
+            $phone = $this->request->getVar("phone");
+            if (isset($phone) && !empty($phone))
+            {
+                $student['phone'] = $phone;
+            }
+
+            $imageFile = $this->request->getFile("profile_image");
+
+            if(!empty($imageFile)) {
+                $imageName = $imageFile->getName();
+                $tempArray = explode(".", $imageName);
+                $newImageName = rand(microtime(true)) . "." . end($tempArray);
+
+                if ($imageFile->move("images", $newImageName))
+                {
+                    $student['profile_image'] = "images/" . $newImageName;
+                    $response = [
+                        "status" => true,
+                        "message" => "image changed",
+
+                    ];
+
+                } else {
+
+                    $response = [
+                        "status" => false,
+                        "message" => "Faild to upload image",
+                        "data" => []
+                    ];
+
+                }
+            }
+
+            if ($studentObject->update($student_id, $student)) {
+
+                $response = [
+                    "status" => true,
+                    "message" => "Student updated",
+                    "data" => $student
+                ];
+
+            } else {
+
+                $response = [
+                    "status" => false,
+                    "message" => "Faild to update student!",
+                    "data" => []
+                ];
+
+            }
+
+        } else {
+
+            $response = [
+                "status" => false,
+                "message" => "No student data found!",
+                "data" => []
+            ];
+        }
+
+        return $this->respondCreated($response);
     }
 
-    // Delete
+    // DELETE
     public function deleteStudent($student_id)
     {
+        $studentObject = new StudentModel();
 
+        $student = $studentObject->find($student_id);
+
+        if (!empty($student))
+        {
+
+            if ($studentObject->delete($student["id"]))
+            {
+                $response = [
+                    "status" => true,
+                    "message" => "Student deleted!",
+                    "data" => []
+                ];
+
+            } else {
+                $response = [
+                    "status" => false,
+                    "message" => "Faild to update student!",
+                    "data" => []
+                ];
+            }
+
+        } else {
+            $response = [
+                "status" => false,
+                "message" => "No student data found!",
+                "data" => []
+            ];
+        }
+
+        return $this->respondCreated($response);
     }
 }
