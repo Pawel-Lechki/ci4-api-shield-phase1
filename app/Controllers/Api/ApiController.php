@@ -140,7 +140,28 @@ class ApiController extends ResourceController
     // GET
     public function singleStudent($student_id)
     {
+        $studentObject = new StudentModel();
 
+        $student = $studentObject->find($student_id);
+
+        if (!empty($student)) {
+
+            $response = [
+                "status" => true,
+                "message" => "Student data found",
+                "data" => $student
+            ];
+
+        } else {
+
+            $response = [
+                "status" => false,
+                "message" => "No student data found!",
+                "data" => []
+            ];
+        }
+
+        return $this->respondCreated($response);
     }
 
     // PUT
